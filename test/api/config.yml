@@ -1,0 +1,4 @@
+GLOBAL:
+  ENDPOINTS:
+    identity:
+      plugin: localhost:50051

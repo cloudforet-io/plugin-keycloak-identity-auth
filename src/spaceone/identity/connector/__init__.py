@@ -1,0 +1,1 @@
+from spaceone.identity.connector.keycloak_connector import KeycloakConnector

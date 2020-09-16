@@ -1,0 +1,3 @@
+GLOBAL:
+  SERVICE: identity
+  PORT: 50051

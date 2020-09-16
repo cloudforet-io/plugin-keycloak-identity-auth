@@ -1,0 +1,12 @@
+*.swp
+*.bak
+disk
+build
+*.egg-info
+*.egg
+*.whl
+.idea
+.pyc
+__pycache__
+venv
+local-conf.yml
