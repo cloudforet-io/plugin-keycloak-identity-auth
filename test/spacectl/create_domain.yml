@@ -2,9 +2,12 @@
 name: keycloak
 plugin_info:
   plugin_id: plugin-1234
-  version: '0.9'
+  version: '1.0'
   options:
-    client_id: "<sso_client_id_text>"
     openid-configuration: https://sso.example.com/auth/realms/spaceone/.well-known/openid-configuration
-    domain: megazone.com
+    auth_type: keycloak_oidc
+  secret_data:
+    client_id: xxxxxxx
+    client_secret: yyyyyyyyy
+  schema: oauth2_client_credentials
 

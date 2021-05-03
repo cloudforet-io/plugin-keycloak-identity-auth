@@ -35,12 +35,16 @@ class AuthManager(BaseManager):
     ###################
     # Verify
     ###################
-    def verify(self, options):
+    def verify(self, options, secret_data=None, schema=None):
         """ Check Google OAuth connection
 
         Args:
             options:
               - client_id
+            secret_data:
+              - secret_data
+              - schema
+            schema: oauth2_client_credentials
         """
         connector = self.locator.get_connector('KeycloakConnector')
         r = connector.verify(options)
@@ -57,14 +61,9 @@ class AuthManager(BaseManager):
         """
         connector = self.locator.get_connector('KeycloakConnector')
         user_info = connector.login(options, credentials, user_credentials)
-        # check user_info, if needed
-        if 'domain' in options:
-            domain = options['domain']
-            user_id = user_info['user_id']
-            self._verify_user_id(domain, user_id)
         return user_info
 
-    def find(self, options, credentials, user_id, keyword=None):
+    def find(self, options, credentials, schema, user_id=None, keyword=None):
         """ Find User information
 
         GoogleOauth cannot find keyword search,
@@ -78,20 +77,15 @@ class AuthManager(BaseManager):
         Returns:
             users_info
         """
-        if user_id == None and keyword != None:
-            raise ERROR_NOT_SUPPORT_KEYWORD_SEARCH()
-
-        if 'domain' in options:
-            domain = options['domain']
-        else:
-            domain = DEFAULT_DOMAIN
-        my_user_id = self._verify_user_id(domain, user_id)
-        user_info = {
-            'user_id': my_user_id,
-            'email': my_user_id,
-            'state': 'UNIDENTIFIED'
-        }
-        return user_info
+        connector = self.locator.get_connector('KeycloakConnector')
+        user_infos = connector.find(options, credentials, schema, user_id, keyword)
+        _LOGGER.debug(f'[find] {user_infos}')
+        return user_infos
+        #user_info = {
+        #    'user_id': my_user_id,
+        #    'email': my_user_id,
+        #    'state': 'ENABLED'
+        #}
 
     def get_endpoint(self, options):
         """
@@ -101,18 +95,4 @@ class AuthManager(BaseManager):
         endpoints = connector.get_endpoint(options)
         return endpoints
 
-    def _verify_user_id(self, domain, user_id):
-        """
-        Args:
-            domain: domain name (ex. gmail.com or mz.co.kr)
-            user_id: user_id (ex. choonho.son or choonho.son@gmail.com)
-
-        Returns:
-            user_id: full user_id (ex. choonho.son@gmail.com)
-        Errors:
-            ERROR_NOT_FOUND_USER_ID: if there is no matching
-        """
-        if user_id.endswith(f'@{domain}'):
-            return user_id
-        raise ERROR_NOT_FOUND_USER_ID(user_id=user_id)
 

@@ -22,9 +22,18 @@ class ERROR_NOT_SUPPORT_KEYWORD_SEARCH(error.ERROR_BASE):
 class ERROR_NOT_FOUND_USER_ID(error.ERROR_BASE):
     _message = 'user_id: {user_id} does not exist.'
 
+class ERROR_NOT_FOUND_USERS(error.ERROR_BASE):
+    _message = 'not found users.'
+
+class ERROR_INVALID_FIND_REQUEST(error.ERROR_BASE):
+    _message = 'user_id or keyword is required'
+
 class INVALID_PLUGIN_OPTIONS(error.ERROR_BASE):
     _message = 'Invalid options={options}'
 
 class AUTHORIZATION_SERVER_ERROR(error.ERROR_BASE):
-    _message = 'Authorization Server reponse code: {error_code}'
+    _message = 'Authorization Server response code: {error_code}'
+
+class AUTHORIZATION_SERVER_RESPONSE_ERROR(error.ERROR_BASE):
+    _message = 'Authorization Server response {keys} not in {response}'
 

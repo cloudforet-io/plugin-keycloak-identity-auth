@@ -19,6 +19,7 @@ __all__ = ["KeycloakConnector"]
 import json
 import requests
 import logging
+from urllib.parse import urlparse
 
 from spaceone.core.error import *
 from spaceone.identity.error import *
@@ -26,12 +27,35 @@ from spaceone.core.connector import BaseConnector
 
 _LOGGER = logging.getLogger(__name__)
 
+# Number of Maximum find user result
+MAX_FIND = 25
+
+def _parse_realm(issuer):
+    """
+    issuer: https://sso.stargate.spaceone.dev/auth/realms/SpaceOne
+    """
+    items = issuer.split('/')
+    realm = items[-1]
+    return realm
+
+def _parse_user_find_url(issuer):
+    """
+    issuer: https://sso.stargate.spaceone.dev/auth/realms/SpaceOne
+    """
+    temp = issuer.split('/')
+    realm = temp[-1]
+
+    items = urlparse(issuer)
+    url = f'{items.scheme}://{items.netloc}/auth/admin/realms/{realm}/users'
+    return url
+
 class KeycloakConnector(BaseConnector):
     def __init__(self, transaction, config):
         super().__init__(transaction, config)
         self.authorization_endpoint = None
         self.token_endpoint = None
         self.userinfo_endpoint = None
+        self.user_find_url = None
 
     def verify(self, options):
         # This is connection check for Google Authorization Server
@@ -78,9 +102,30 @@ class KeycloakConnector(BaseConnector):
         raise ERROR_NOT_FOUND(key='user', value='<from access_token>')
 
 
-    def find(self, options, params):
-        # TODO: NOT SUPPORT
-        raise ERROR_NOT_FOUND(key='find', value='does not support')
+    def find(self, options, credentials, schema, user_id, keyword):
+        # UserInfo
+        try:
+            self.get_endpoint(options)
+            access_token  = self._get_token_from_credentials(credentials, schema)
+            headers={'Content-Type':'application/json',
+                 'Authorization': 'Bearer {}'.format(access_token)}
+            req_user_find_url = f'{self.user_find_url}?'
+            if user_id:
+                req_user_find_url = f'{req_user_find_url}username={user_id}&'
+            if keyword:
+                req_user_find_url = f'{req_user_find_url}search={keyword}&'
+            req_user_find_url = f'{req_user_find_url}max={MAX_FIND}&'
+            _LOGGER.debug(f'[find] {req_user_find_url}')
+            resp = requests.get(req_user_find_url, headers=headers)
+            if resp.status_code == 200:
+                json_result = resp.json()
+                return self._parse_user_infos(json_result)
+
+            if resp.status_code != 200:
+                raise ERROR_NOT_FOUND(key='find', value=req_user_find_url)
+        except Exception as e:
+            _LOGGER.debug(f'[find] {e}')
+            raise ERROR_INVALID_FIND_REQUEST()
 
     def get_endpoint(self, options):
         """ Find endpoints
@@ -89,17 +134,22 @@ class KeycloakConnector(BaseConnector):
         userinfo_endpoint
         """
         result = {}
-        if 'openid-configuration' in options:
-            config_url = options['openid-configuration']
-            result = self._parse_configuration(config_url)
-        else:
-            endpoints_keys = ['authorization_endpoint', 'token_endpoint', 'userinfo_endpoint']
-            for key in endpoints_keys:
-                value = options[key]
-                result[key] = value
-        self.authorization_endpoint = result['authorization_endpoint']
-        self.token_endpoint = result['token_endpoint']
-        self.userinfo_endpoint = result['userinfo_endpoint']
+        try:
+            self.authorization_endpoint = options['metadata']['authorization_endpoint']
+            self.token_endpoint = options['metadata']['token_endpoint']
+            self.userinfo_endpoint = options['metadata']['userinfo_endpoint']
+            self.user_find_url = options['metadata']['user_find_url']
+
+        except Exception as e:
+            if 'openid-configuration' in options:
+                config_url = options['openid-configuration']
+                result = self._parse_configuration(config_url)
+            else:
+                raise INVALID_PLUGIN_OPTIONS(options=options)
+            self.authorization_endpoint = result['authorization_endpoint']
+            self.token_endpoint = result['token_endpoint']
+            self.userinfo_endpoint = result['userinfo_endpoint']
+            self.user_find_url = result['user_find_url']
 
         return result
 
@@ -112,16 +162,66 @@ class KeycloakConnector(BaseConnector):
             r = requests.get(config_url)
             if r.status_code == 200:
                 json_result = r.json()
-                _LOGGER.debug(f'[_parse_configuration] {json_result}')
-                endpoints_keys = ['authorization_endpoint', 'token_endpoint', 'userinfo_endpoint']
-                for key in endpoints_keys:
-                    value = json_result[key]
-                    result[key] = value
+                #_LOGGER.debug(f'[_parse_configuration] {json_result}')
+                keys = ['authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer',
+                                  'end_session_endpoint']
+                for key in keys:
+                    if key not in json_result:
+                        raise AUTHORIZATION_SERVER_RESPONSE_ERROR(keys=key, response=json_result)
+                    result[key] = json_result[key]
+                # add realm
+                result['realm'] = _parse_realm(json_result['issuer'])
+                result['user_find_url'] = _parse_user_find_url(json_result['issuer'])
+                _LOGGER.debug(f'[_parse_configuration] {result}')
                 return result
             else:
                 raise AUTHORIZATION_SERVER_ERROR(error_code=r.status_code)
 
         except Exception as e:
             raise INVALID_PLUGIN_OPTIONS(options=config_url)
+
+    def _get_token_from_credentials(self, credentials, schema):
+        """ get access_token from keycloak
+        """
+        if schema == '' or schema == 'oauth2_client_credentials':
+            if 'client_id' not in credentials:
+                raise ERROR_PLUGIN_OPTIONS(credentials='client_id')
+            if 'client_secret' not in credentials:
+                raise ERROR_PLUGIN_OPTIONS(credentials='client_secret')
+
+            data = {
+                'grant_type': 'client_credentials',
+                'client_id': credentials['client_id'],
+                'client_secret': credentials['client_secret']
+            }
+        else:
+            raise ERROR_PLUGIN_OPTIONS(credentials=credentials)
+
+        r = requests.post(self.token_endpoint, data=data)
+        if r.status_code == 200:
+            json_result = r.json()
+            return json_result['access_token']
+        raise AUTHORIZATION_SERVER_ERROR(error_code=r.status_code)
+
+    def _parse_user_infos(self, users):
+        """
+        [{'id': 'ec504ef1-87b9-412f-85d6-e1a20b397798', 'createdTimestamp': 1589458754161, 'username': 'choonhoson@mz.co.kr', 'enabled': True, 'totp': False, 'emailVerified': False, 'firstName': 'Choonho', 'lastName': 'Son', 'email': 'choonhoson@mz.co.kr', 'disableableCredentialTypes': [], 'requiredActions': [], 'notBefore': 0, 'access': {'manageGroupMembership': False, 'view': True, 'mapRoles': False, 'impersonate': False, 'manage': False}}]
+        """
+        result = []
+        for user in users:
+            if 'enabled' in user:
+                if user['enabled'] == False:
+                    continue
+            else:
+                continue
+
+            user_info = {
+                'user_id': user['username'],
+                'state': 'ENABLED'
+            }
+            if 'email' in user:
+                user_info.update({'email': user['email']})
+            result.append(user_info)
+        return result
 
 

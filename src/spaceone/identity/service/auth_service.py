@@ -57,7 +57,8 @@ class AuthService(BaseService):
         Args:
             params
               - options
-              - secret_data: may be empty dictionary
+              - secret_data: client_id, client_secret
+              - schema: oauth2_client_credentials
 
         Returns:
 
@@ -66,7 +67,9 @@ class AuthService(BaseService):
         """
         manager = self.locator.get_manager('AuthManager')
         options = params['options']
-        manager.verify(options)
+        secret_data = params.get('secret_data', {})
+        schema = params.get('schema', '')
+        manager.verify(options, secret_data, schema)
         return {}
 
     @transaction
@@ -77,6 +80,7 @@ class AuthService(BaseService):
             params
               - options
               - secret_data: may be empty dictionary
+              - schema
               - user_id
               - keyword
         Returns:
@@ -87,14 +91,21 @@ class AuthService(BaseService):
         _LOGGER.debug(f'[find] params: {params}')
         manager = self.locator.get_manager('AuthManager')
         options = params['options']
-        credentials = params['secret_data']
+        secret_data = params.get('secret_data', {})
+        schema = params.get('schema', '')
+
         # collect plugins_info
         user_id = params.get('user_id', None)
         keyword = params.get('keyword', None)
+        if user_id == None and keyword == None:
+            raise ERROR_INVALID_FIND_REQUEST()
 
-        user_info = manager.find(options, credentials, user_id, keyword)
-        _LOGGER.debug(f'[find] user_info: {user_info}')
-        return [user_info], 1
+        user_infos = manager.find(options, secret_data, schema, user_id, keyword)
+        _LOGGER.debug(f'[find] user_info: {user_infos}')
+        if len(user_infos) == 0:
+            raise ERROR_NOT_FOUND_USERS()
+
+        return user_infos, len(user_infos)
 
     @transaction
     @check_required(['options','secret_data', 'user_credentials'])
@@ -105,6 +116,7 @@ class AuthService(BaseService):
             params
               - options
               - secret_data
+              - schema
               - user_credentials
 
         Returns:
