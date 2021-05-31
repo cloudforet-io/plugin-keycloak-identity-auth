@@ -102,11 +102,15 @@ class KeycloakConnector(BaseConnector):
         raise ERROR_NOT_FOUND(key='user', value='<from access_token>')
 
 
-    def find(self, options, credentials, schema, user_id, keyword):
+    def find(self, options, secret_data, schema, user_id, keyword):
         # UserInfo
+        if secret_data == {}:
+            # not support find
+            return self._unidentified_user(user_id, keyword)
+
         try:
             self.get_endpoint(options)
-            access_token  = self._get_token_from_credentials(credentials, schema)
+            access_token  = self._get_token_from_credentials(secret_data, schema)
             headers={'Content-Type':'application/json',
                  'Authorization': 'Bearer {}'.format(access_token)}
             req_user_find_url = f'{self.user_find_url}?'
@@ -224,4 +228,14 @@ class KeycloakConnector(BaseConnector):
             result.append(user_info)
         return result
 
-
+    def _unidentified_user(self, user_id, keyword):
+        result = []
+        if user_id:
+            user_info = {
+                'user_id': user_id,
+                'state': 'UNIDENTIFIED'
+            }
+            result.append(user_info)
+        else:
+            raise ERROR_NOT_SUPPORT_KEYWORD_SEARCH()
+        return result

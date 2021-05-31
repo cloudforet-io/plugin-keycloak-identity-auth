@@ -63,7 +63,7 @@ class AuthManager(BaseManager):
         user_info = connector.login(options, credentials, user_credentials)
         return user_info
 
-    def find(self, options, credentials, schema, user_id=None, keyword=None):
+    def find(self, options, secret_data, schema, user_id=None, keyword=None):
         """ Find User information
 
         GoogleOauth cannot find keyword search,
@@ -78,7 +78,7 @@ class AuthManager(BaseManager):
             users_info
         """
         connector = self.locator.get_connector('KeycloakConnector')
-        user_infos = connector.find(options, credentials, schema, user_id, keyword)
+        user_infos = connector.find(options, secret_data, schema, user_id, keyword)
         _LOGGER.debug(f'[find] {user_infos}')
         return user_infos
         #user_info = {
