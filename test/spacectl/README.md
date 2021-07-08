@@ -31,5 +31,5 @@ spacectl exec change_auth_plugin identity.Domain -c change_auth_plugin.yaml
 ## All in one test
 
 ~~~
-spacectl apply -f test_domain.yaml
+spacectl apply test_domain.yaml
 ~~~

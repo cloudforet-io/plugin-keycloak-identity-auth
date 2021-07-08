@@ -14,9 +14,9 @@ tasks:
       resource_type: identity.Domain
       data:
         name: ${{ var.domain_name }}
-      matches:
-        - name
-      mode: NO_UPDATE
+      mode: EXEC
+      verb:
+        exec: create
 
   - name: Create DomainOwner
     id: domain_owner
@@ -28,11 +28,9 @@ tasks:
         owner_id: ${{ var.domain_owner.id }}
         password: ${{ var.domain_owner.password }}
         domain_id: ${{ tasks.domain.output.domain_id }}
-      matches:
-        - domain_id
-      mode: NO_UPDATE
+      mode: EXEC
       verb:
-        read: get
+        exec: create
 
 
   - name: Create DomainOwner Token
