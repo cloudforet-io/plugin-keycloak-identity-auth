@@ -3,7 +3,7 @@ name: Keycloak OIDC Auth Plugin
 service_type: identity.Domain
 image: pyengine/plugin-keycloak-oidc
 labels: ['Authentication', 'Keycloak']
-templates:
+template:
   options:
   - key: openid-configuration
     name: OpenID configuration URL
