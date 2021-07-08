@@ -1,13 +1,3 @@
 ---
 name: keycloak
-plugin_info:
-  plugin_id: plugin-1234
-  version: '1.0'
-  options:
-    openid-configuration: https://sso.example.com/auth/realms/spaceone/.well-known/openid-configuration
-    auth_type: keycloak_oidc
-  secret_data:
-    client_id: xxxxxxx
-    client_secret: yyyyyyyyy
-  schema: oauth2_client_credentials
 

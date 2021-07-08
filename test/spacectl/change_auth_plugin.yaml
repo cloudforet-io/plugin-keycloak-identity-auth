@@ -1,0 +1,9 @@
+plugin_info:
+  options:
+    auth_type: keycloak_oidc
+    openid-configuration: https://sso.example.com/auth/realms/test-domain/.well-known/openid-configuration
+  plugin_id: plugin-keycloak-oidc
+  secret_data:
+    client_id: test_client_id
+    client_secret: 11111111-1111-1111-1111-111111111111
+  version: '0.1'

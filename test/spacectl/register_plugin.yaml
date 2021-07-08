@@ -1,0 +1,22 @@
+---
+name: Keycloak OIDC Auth Plugin
+service_type: identity.Domain
+image: pyengine/plugin-keycloak-oidc
+labels: ['Authentication', 'Keycloak']
+templates:
+  options:
+  - key: openid-configuration
+    name: OpenID configuration URL
+    type: str
+    is_required: true
+    example: https://<sso domain>/auth/realms/<your domain>/.well-known/openid-configuration
+  - key: auth_type
+    name: Authentication Type
+    type: str
+    is_required: true
+    example: keycloak_oidc
+tags:
+  icon: https://spaceone-custom-assets.s3.ap-northeast-2.amazonaws.com/console-assets/icons/keycloak.svg
+  description: Keycloak OAuth Authentication
+  spaceone:plugin_name: plugin-keycloak-oidc
+
