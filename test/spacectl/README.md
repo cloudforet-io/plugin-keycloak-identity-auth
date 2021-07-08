@@ -27,3 +27,9 @@ spacectl exec create identity.Domain -f create_domain.yaml
 ~~~
 spacectl exec change_auth_plugin identity.Domain -c change_auth_plugin.yaml
 ~~~
+
+## All in one test
+
+~~~
+spacectl apply -f test_domain.yaml
+~~~
