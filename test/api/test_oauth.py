@@ -15,7 +15,8 @@ CLIENT_SECRET = os.environ.get('CLIENT_SECRET', 'export CLIENT_SECRET=aaaaaaaaa'
 
 OPTIONS = {
     'openid-configuration': OPENID_CONFIGURATION,
-    'auth_type': 'keycloak_oidc'
+    'auth_type': 'keycloak_oidc',
+    'client_id': CLIENT_ID
 }
 
 SECRET_DATA = {
@@ -52,14 +53,14 @@ class TestOAuth(TestCase):
         j = to_json(auth_v_info)
         print(j)
 
-    def test_find_user_id(self):
-        credentials = SECRET_DATA
-        user_id = 'choonhoson@mz.co.kr'
-        keyword = 'mz.co.kr'
-        users_info = self.identity.Auth.find({'options':OPTIONS, 'secret_data':credentials, 'schema': SCHEMA, 'user_id':user_id})
-        j = to_json(users_info)
-        print(j)
-        self.assertEqual(j['total_count'], 1)
+   def test_find_user_id(self):
+       credentials = SECRET_DATA
+       user_id = 'choonho.son@gmail.com'
+       keyword = 'mz.co.kr'
+       users_info = self.identity.Auth.find({'options':OPTIONS, 'secret_data':credentials, 'schema': SCHEMA, 'user_id':user_id})
+       j = to_json(users_info)
+       print(j)
+       self.assertEqual(j['total_count'], 1)
 
     def test_find_keyword(self):
         credentials = SECRET_DATA

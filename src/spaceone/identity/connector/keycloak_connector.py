@@ -192,7 +192,6 @@ class KeycloakConnector(BaseConnector):
                 raise ERROR_PLUGIN_OPTIONS(credentials='client_id')
             if 'client_secret' not in credentials:
                 raise ERROR_PLUGIN_OPTIONS(credentials='client_secret')
-
             data = {
                 'grant_type': 'client_credentials',
                 'client_id': credentials['client_id'],
@@ -201,10 +200,14 @@ class KeycloakConnector(BaseConnector):
         else:
             raise ERROR_PLUGIN_OPTIONS(credentials=credentials)
 
-        r = requests.post(self.token_endpoint, data=data)
+        r = requests.post(self.token_endpoint, data=data, verify=False)
         if r.status_code == 200:
             json_result = r.json()
             return json_result['access_token']
+        elif r.status_code == 401:
+            raise ERROR_INVALID_CLIENT_CREDENTIALS_OF_FIND(message=r.status_code)
+
+        _LOGGER.error(f'[_get_token_from_credentials] {r.status_code}')
         raise AUTHORIZATION_SERVER_ERROR(error_code=r.status_code)
 
     def _parse_user_infos(self, users):
