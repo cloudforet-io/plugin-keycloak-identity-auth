@@ -8,32 +8,42 @@ Plugin for Keycloak OpenID Connector
 ~~~python
 options(dict) = {
 	'openid-configuration': 'https://<SSO domain>/auth/realms/<Your Realm>/.well-known/openid-configuration',
-	'auth_type': 'keycloak_oidc'
+	'auth_type': 'keycloak_oidc',
+	'client_id': 'CLIENT ID for login'
 	}
 
 secret_data = {
-	'client_id': 'client_id text',
+	'client_id': 'CLIENT ID for find users',
 	'client_secret': 'client secret text'
 }
-
-schema = 'oauth2_client_credentials'
 ~~~
 
 
 ## Example
 
-How to create client_id, client_secret.
+To enable keycloak-oidc plugin,
+use identity.Domain.change_auth_plugin API.
+
+
+~~~bash
+spacectl exec change_auth_plugin identity.Domain -f keycloak.yaml
+~~~
+
+Example YAML file
 
 See https://github.com/spaceone-dev/plugin-keycloak-oidc/wiki/Keycloak-configuration-example
 
-
-~~~python
-options = {
-	'openid-configuration': 'https://sso.example.com/auth/realms/MY_DOMAIN/.well-known/openid-configuration',
-	'auth_type': 'keycloak_oidc'
-	}
-secret_id='secret-11111111'
-schema='oauth2_client_credentials'
+~~~yaml
+plugin_info:
+  options:
+    auth_type: keycloak_oidc
+    openid-configuration: https://sso.example.com/auth/realms/test-domain/.well-known/openid-configuration
+    client_id: test_client_id
+  plugin_id: plugin-keycloak-oidc
+  secret_data:
+    client_id: test_client_id2
+    client_secret: 11111111-1111-1111-1111-111111111111
+  version: '1.0'
 ~~~
 
 # Auth.init
