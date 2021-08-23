@@ -123,6 +123,9 @@ class KeycloakConnector(BaseConnector):
             resp = requests.get(req_user_find_url, headers=headers)
             if resp.status_code == 200:
                 json_result = resp.json()
+                if user_id:
+                    # Exact match
+                    return self._parse_user_infos(json_result, user_id)
                 return self._parse_user_infos(json_result)
 
             if resp.status_code != 200:
@@ -210,7 +213,7 @@ class KeycloakConnector(BaseConnector):
         _LOGGER.error(f'[_get_token_from_credentials] {r.status_code}')
         raise AUTHORIZATION_SERVER_ERROR(error_code=r.status_code)
 
-    def _parse_user_infos(self, users):
+    def _parse_user_infos(self, users, exact_match=None):
         """
         [{'id': 'ec504ef1-87b9-412f-85d6-e1a20b397798', 'createdTimestamp': 1589458754161, 'username': 'choonhoson@mz.co.kr', 'enabled': True, 'totp': False, 'emailVerified': False, 'firstName': 'Choonho', 'lastName': 'Son', 'email': 'choonhoson@mz.co.kr', 'disableableCredentialTypes': [], 'requiredActions': [], 'notBefore': 0, 'access': {'manageGroupMembership': False, 'view': True, 'mapRoles': False, 'impersonate': False, 'manage': False}}]
         """
@@ -221,6 +224,11 @@ class KeycloakConnector(BaseConnector):
                     continue
             else:
                 continue
+
+            if exact_match:
+                if exact_match != user['username']:
+                    # This is partial match
+                    continue
 
             user_info = {
                 'user_id': user['username'],
