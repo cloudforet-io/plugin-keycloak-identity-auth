@@ -91,12 +91,35 @@ class KeycloakConnector(BaseConnector):
         # status_code == 200
         r2 = r.json()
         _LOGGER.debug(f'response: {r2}')
+        """
+        response: {
+        'sub': 'aca4e676-2b9b-4e30-84c2-e3cf0d524104',
+        'email_verified': False,
+        'name': 'Choonho test2 Son',
+        'preferred_username': 'choonho.son',
+        'given_name': 'Choonho test2',
+        'family_name': 'Son',
+        'email': 'choonho@example.com'}
+        """
         result = {}
-        if 'email' in r2:
-            result['email'] = r2['email']
-            result['user_id'] = r2['email']
+        if 'sub' in r2:
+            if 'email' in r2:
+                 result['email'] = r2['email']
+            else:
+                result['email'] = 'UPDATE@EMAIL'
+
             if 'preferred_username' in r2:
-                result['name'] = r2['preferred_username']
+                result['user_id'] = r2['preferred_username']
+            else:
+                # where is username
+                _LOGGER.error(f'no preferred_username: {r2}')
+                raise ERROR_KEYCLOAK_CONFIGURATION(field='perferred_username')
+
+            if 'name' in r2:
+                result['name'] = r2['name']
+            else:
+                result['name'] = 'UPDATE NAME'
+
             result['state'] = 'ENABLED'
             return result
         raise ERROR_NOT_FOUND(key='user', value='<from access_token>')

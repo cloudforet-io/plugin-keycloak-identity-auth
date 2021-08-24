@@ -40,3 +40,6 @@ class AUTHORIZATION_SERVER_RESPONSE_ERROR(error.ERROR_BASE):
 class ERROR_INVALID_CLIENT_CREDENTIALS_OF_FIND(error.ERROR_BASE):
     _message = '{response} Invalid Client Credentials for find request, check permission'
 
+class ERROR_KEYCLOAK_CONFIGURATION(error.ERROR_BASE):
+    _message = 'Contact keycloak administrator, field={field}'
+

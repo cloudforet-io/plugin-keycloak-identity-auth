@@ -1,6 +1,7 @@
 #! /bin/bash
 # Build a docker image
+DEFAUKT=0.1
+VER=${1:-$DEFAULT}
 cd ..
-docker build -t pyengine/keycloak-oidc .
-docker tag pyengine/keycloak pyengine/keycloak-oidc:1.1
-docker tag pyengine/keycloak spaceone/keycloak-oidc:1.1
+docker build -t pyengine/plugin-keycloak-identity-auth .
+docker tag pyengine/plugin-keycloak-identity-auth pyengine/plugin-keycloak-identity-auth:${VER}

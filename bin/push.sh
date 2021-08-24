@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # How to upload
-./build.sh
-docker push pyengine/keycloak-oidc:1.1
-docker push spaceone/keycloak-oidc:1.1
+DEFAULT=0.1
+VER=${1:-$DEFAULT}
+./build.sh ${VER}
+docker push pyengine/plugin-keycloak-identity-auth:${VER}
