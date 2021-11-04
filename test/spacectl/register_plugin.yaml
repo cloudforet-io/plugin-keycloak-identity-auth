@@ -1,7 +1,7 @@
 ---
 name: Keycloak OIDC Auth Plugin
 service_type: identity.Domain
-image: pyengine/plugin-keycloak-oidc
+image: pyengine/plugin-keycloak-identity-auth
 labels: ['Authentication', 'Keycloak']
 template:
   options:
@@ -18,5 +18,5 @@ template:
 tags:
   icon: https://spaceone-custom-assets.s3.ap-northeast-2.amazonaws.com/console-assets/icons/keycloak.svg
   description: Keycloak OAuth Authentication
-  spaceone:plugin_name: plugin-keycloak-oidc
+  spaceone:plugin_name: plugin-keycloak-identity-auth
 
