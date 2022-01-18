@@ -145,14 +145,15 @@ class KeycloakConnector(BaseConnector):
             req_user_find_url = f'{self.user_find_url}/{keycloak_id}'
             _LOGGER.debug(f'[find_by_id] {req_user_find_url}')
             resp = requests.get(req_user_find_url, headers=headers)
+            print("====")
+            print(resp)
+            print(resp.status_code)
+            print(resp.json())
+            print("====")
             if resp.status_code == 200:
                 json_result = resp.json()
-                print("======")
-                print(json_result)
-                print("======")
                 return self._parse_user_infos(json_result)
-
-            if resp.status_code != 200:
+            else:
                 return None
         except Exception as e:
             _LOGGER.debug(f'[find_by_id] {e}')
@@ -187,8 +188,7 @@ class KeycloakConnector(BaseConnector):
                     # Exact match
                     return self._parse_user_infos(json_result, user_id)
                 return self._parse_user_infos(json_result)
-
-            if resp.status_code != 200:
+            else:
                 raise ERROR_NOT_FOUND(key='find', value=req_user_find_url)
         except Exception as e:
             _LOGGER.debug(f'[find] {e}')
