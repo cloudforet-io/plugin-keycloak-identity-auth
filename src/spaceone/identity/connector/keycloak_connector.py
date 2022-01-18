@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 # Number of Maximum find user result
 MAX_FIND = 25
 
+
 def _parse_realm(issuer):
     """
     issuer: https://sso.stargate.spaceone.dev/auth/realms/SpaceOne
@@ -37,6 +38,7 @@ def _parse_realm(issuer):
     items = issuer.split('/')
     realm = items[-1]
     return realm
+
 
 def _parse_user_find_url(issuer):
     """
@@ -48,6 +50,7 @@ def _parse_user_find_url(issuer):
     items = urlparse(issuer)
     url = f'{items.scheme}://{items.netloc}/auth/admin/realms/{realm}/users'
     return url
+
 
 class KeycloakConnector(BaseConnector):
     def __init__(self, transaction, config):
@@ -71,7 +74,7 @@ class KeycloakConnector(BaseConnector):
             _LOGGER.debug(f'[verify] status code: {r.status_code}')
             raise ERROR_NOT_FOUND(key='authorization_endpoint', value=self.authorization_endpoint)
 
-    def login(self, options, credentials, user_credentials):
+    def login(self, options, secret_data, schema, user_credentials):
         """
         options
         credentials:
@@ -80,9 +83,11 @@ class KeycloakConnector(BaseConnector):
         self.get_endpoint(options)
         # Authorization Grant
         access_token = user_credentials.get('access_token', '')
-        headers={'Content-Type':'application/json',
-                 'Authorization': 'Bearer {}'.format(access_token)}
-        # Check tokeninfo
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer {}'.format(access_token)
+        }
+        # Check token info
         r = requests.get(self.userinfo_endpoint, headers=headers)
         if r.status_code != 200:
             _LOGGER.debug("KeycloakConnector return code:%s" % r.status_code)
@@ -109,11 +114,16 @@ class KeycloakConnector(BaseConnector):
                 result['email'] = 'UPDATE@EMAIL'
 
             if 'preferred_username' in r2:
-                result['user_id'] = r2['preferred_username']
+                try:
+                    self.find(options, secret_data, schema, keycloak_id=r2['sub'])
+                    result['user_id'] = r2['preferred_username']
+                except Exception as e:
+                    _LOGGER.debug(f'[login] user search error: {e}')
+                    result['user_id'] = r2['preferred_username']
             else:
                 # where is username
                 _LOGGER.error(f'no preferred_username: {r2}')
-                raise ERROR_KEYCLOAK_CONFIGURATION(field='perferred_username')
+                raise ERROR_KEYCLOAK_CONFIGURATION(field='preferred_username')
 
             if 'name' in r2:
                 result['name'] = r2['name']
@@ -124,8 +134,7 @@ class KeycloakConnector(BaseConnector):
             return result
         raise ERROR_NOT_FOUND(key='user', value='<from access_token>')
 
-
-    def find(self, options, secret_data, schema, user_id, keyword):
+    def find(self, options, secret_data, schema, user_id=None, keyword=None, keycloak_id=None):
         # UserInfo
         if secret_data == {}:
             # not support find
@@ -133,19 +142,29 @@ class KeycloakConnector(BaseConnector):
 
         try:
             self.get_endpoint(options)
-            access_token  = self._get_token_from_credentials(secret_data, schema)
-            headers={'Content-Type':'application/json',
-                 'Authorization': 'Bearer {}'.format(access_token)}
-            req_user_find_url = f'{self.user_find_url}?'
-            if user_id:
-                req_user_find_url = f'{req_user_find_url}username={user_id}&'
-            if keyword:
-                req_user_find_url = f'{req_user_find_url}search={keyword}&'
-            req_user_find_url = f'{req_user_find_url}max={MAX_FIND}&'
+            access_token = self._get_token_from_credentials(secret_data, schema)
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer {}'.format(access_token)
+            }
+
+            if keycloak_id:
+                req_user_find_url = f'{self.user_find_url}/{keycloak_id}'
+            else:
+                req_user_find_url = f'{self.user_find_url}?'
+                if user_id:
+                    req_user_find_url = f'{req_user_find_url}username={user_id}&'
+                elif keyword:
+                    req_user_find_url = f'{req_user_find_url}search={keyword}&'
+                req_user_find_url = f'{req_user_find_url}max={MAX_FIND}&'
+
             _LOGGER.debug(f'[find] {req_user_find_url}')
             resp = requests.get(req_user_find_url, headers=headers)
             if resp.status_code == 200:
                 json_result = resp.json()
+                print("======")
+                print(json_result)
+                print("======")
                 if user_id:
                     # Exact match
                     return self._parse_user_infos(json_result, user_id)
@@ -175,14 +194,13 @@ class KeycloakConnector(BaseConnector):
                 config_url = options['openid-configuration']
                 result = self._parse_configuration(config_url)
             else:
-                raise INVALID_PLUGIN_OPTIONS(options=options)
+                raise ERROR_INVALID_PLUGIN_OPTIONS(options=options)
             self.authorization_endpoint = result['authorization_endpoint']
             self.token_endpoint = result['token_endpoint']
             self.userinfo_endpoint = result['userinfo_endpoint']
             self.user_find_url = result['user_find_url']
 
         return result
-
 
     def _parse_configuration(self, config_url):
         """ discover endpoints
@@ -194,10 +212,10 @@ class KeycloakConnector(BaseConnector):
                 json_result = r.json()
                 #_LOGGER.debug(f'[_parse_configuration] {json_result}')
                 keys = ['authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer',
-                                  'end_session_endpoint']
+                        'end_session_endpoint']
                 for key in keys:
                     if key not in json_result:
-                        raise AUTHORIZATION_SERVER_RESPONSE_ERROR(keys=key, response=json_result)
+                        raise ERROR_AUTHORIZATION_SERVER_RESPONSE(keys=key, response=json_result)
                     result[key] = json_result[key]
                 # add realm
                 result['realm'] = _parse_realm(json_result['issuer'])
@@ -205,26 +223,26 @@ class KeycloakConnector(BaseConnector):
                 _LOGGER.debug(f'[_parse_configuration] {result}')
                 return result
             else:
-                raise AUTHORIZATION_SERVER_ERROR(error_code=r.status_code)
+                raise ERROR_AUTHORIZATION_SERVER(error_code=r.status_code)
 
         except Exception as e:
-            raise INVALID_PLUGIN_OPTIONS(options=config_url)
+            raise ERROR_INVALID_PLUGIN_OPTIONS(options=config_url)
 
     def _get_token_from_credentials(self, credentials, schema):
         """ get access_token from keycloak
         """
         if schema == '' or schema == 'oauth2_client_credentials':
             if 'client_id' not in credentials:
-                raise ERROR_PLUGIN_OPTIONS(credentials='client_id')
+                raise ERROR_INVALID_PLUGIN_OPTIONS(options='secret_data.client_id')
             if 'client_secret' not in credentials:
-                raise ERROR_PLUGIN_OPTIONS(credentials='client_secret')
+                raise ERROR_INVALID_PLUGIN_OPTIONS(options='secret_data.client_id')
             data = {
                 'grant_type': 'client_credentials',
                 'client_id': credentials['client_id'],
                 'client_secret': credentials['client_secret']
             }
         else:
-            raise ERROR_PLUGIN_OPTIONS(credentials=credentials)
+            raise ERROR_INVALID_PLUGIN_OPTIONS(options='secret_data')
 
         r = requests.post(self.token_endpoint, data=data, verify=False)
         if r.status_code == 200:
@@ -234,7 +252,7 @@ class KeycloakConnector(BaseConnector):
             raise ERROR_INVALID_CLIENT_CREDENTIALS_OF_FIND(message=r.status_code)
 
         _LOGGER.error(f'[_get_token_from_credentials] {r.status_code}')
-        raise AUTHORIZATION_SERVER_ERROR(error_code=r.status_code)
+        raise ERROR_AUTHORIZATION_SERVER(error_code=r.status_code)
 
     def _parse_user_infos(self, users, exact_match=None):
         """

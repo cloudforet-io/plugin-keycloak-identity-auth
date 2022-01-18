@@ -51,7 +51,7 @@ class AuthManager(BaseManager):
         # ACTIVE/UNKNOWN
         return r
 
-    def login(self, options, credentials, user_credentials):
+    def login(self, options, secret_data, schema, user_credentials):
         """ Get access_token from credentials
         Args:
             options(dict):
@@ -60,7 +60,7 @@ class AuthManager(BaseManager):
               - access_token: google_oauth access_token for verifying
         """
         connector = self.locator.get_connector('KeycloakConnector')
-        user_info = connector.login(options, credentials, user_credentials)
+        user_info = connector.login(options, secret_data, schema, user_credentials)
         return user_info
 
     def find(self, options, secret_data, schema, user_id=None, keyword=None):

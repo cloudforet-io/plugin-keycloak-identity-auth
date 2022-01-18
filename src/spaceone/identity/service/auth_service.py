@@ -108,7 +108,7 @@ class AuthService(BaseService):
         return user_infos, len(user_infos)
 
     @transaction
-    @check_required(['options','secret_data', 'user_credentials'])
+    @check_required(['options', 'secret_data', 'user_credentials'])
     def login(self, params):
         """ verify options
         options = configuration (https://<domain>/auth/realms/<Realm>/.well-known/openid-configuration)
@@ -126,6 +126,7 @@ class AuthService(BaseService):
         """
         manager = self.locator.get_manager('AuthManager')
         options = params['options']
-        credentials = params['secret_data']
+        secret_data = params['secret_data']
+        schema = params.get('schema', '')
         user_credentials = params['user_credentials']
-        return manager.login(options, credentials, user_credentials)
+        return manager.login(options, secret_data, schema, user_credentials)
