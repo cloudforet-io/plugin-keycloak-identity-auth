@@ -114,12 +114,7 @@ class KeycloakConnector(BaseConnector):
                 result['email'] = 'UPDATE@EMAIL'
 
             if 'preferred_username' in r2:
-                try:
-                    self.find(options, secret_data, schema, keycloak_id=r2['sub'])
-                    result['user_id'] = r2['preferred_username']
-                except Exception as e:
-                    _LOGGER.debug(f'[login] user search error: {e}')
-                    result['user_id'] = r2['preferred_username']
+                result['user_id'] = r2['preferred_username']
             else:
                 # where is username
                 _LOGGER.error(f'no preferred_username: {r2}')
@@ -134,7 +129,7 @@ class KeycloakConnector(BaseConnector):
             return result
         raise ERROR_NOT_FOUND(key='user', value='<from access_token>')
 
-    def find(self, options, secret_data, schema, user_id=None, keyword=None, keycloak_id=None):
+    def find(self, options, secret_data, schema, user_id, keyword):
         # UserInfo
         if secret_data == {}:
             # not support find
@@ -148,23 +143,17 @@ class KeycloakConnector(BaseConnector):
                 'Authorization': 'Bearer {}'.format(access_token)
             }
 
-            if keycloak_id:
-                req_user_find_url = f'{self.user_find_url}/{keycloak_id}'
-            else:
-                req_user_find_url = f'{self.user_find_url}?'
-                if user_id:
-                    req_user_find_url = f'{req_user_find_url}username={user_id}&'
-                elif keyword:
-                    req_user_find_url = f'{req_user_find_url}search={keyword}&'
-                req_user_find_url = f'{req_user_find_url}max={MAX_FIND}&'
+            req_user_find_url = f'{self.user_find_url}?'
+            if user_id:
+                req_user_find_url = f'{req_user_find_url}username={user_id}&'
+            elif keyword:
+                req_user_find_url = f'{req_user_find_url}search={keyword}&'
+            req_user_find_url = f'{req_user_find_url}max={MAX_FIND}&'
 
             _LOGGER.debug(f'[find] {req_user_find_url}')
             resp = requests.get(req_user_find_url, headers=headers)
             if resp.status_code == 200:
                 json_result = resp.json()
-                print("======")
-                print(json_result)
-                print("======")
                 if user_id:
                     # Exact match
                     return self._parse_user_infos(json_result, user_id)
