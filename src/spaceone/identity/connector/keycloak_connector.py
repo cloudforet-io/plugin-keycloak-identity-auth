@@ -114,12 +114,7 @@ class KeycloakConnector(BaseConnector):
                 result['email'] = 'UPDATE@EMAIL'
 
             if 'preferred_username' in r2:
-                try:
-                    user_info = self.find_by_id(options, r2['sub'], access_token)
-                    result['user_id'] = r2['preferred_username']
-                except Exception as e:
-                    _LOGGER.debug(f'[login] user search error: {e}')
-                    result['user_id'] = r2['preferred_username']
+                result['user_id'] = r2['preferred_username']
             else:
                 # where is username
                 _LOGGER.error(f'no preferred_username: {r2}')
@@ -133,31 +128,6 @@ class KeycloakConnector(BaseConnector):
             result['state'] = 'ENABLED'
             return result
         raise ERROR_NOT_FOUND(key='user', value='<from access_token>')
-
-    def find_by_id(self, options, keycloak_id, access_token):
-        try:
-            self.get_endpoint(options)
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer {}'.format(access_token)
-            }
-
-            req_user_find_url = f'{self.user_find_url}/{keycloak_id}'
-            _LOGGER.debug(f'[find_by_id] {req_user_find_url}')
-            resp = requests.get(req_user_find_url, headers=headers)
-            print("====")
-            print(resp)
-            print(resp.status_code)
-            print(resp.json())
-            print("====")
-            if resp.status_code == 200:
-                json_result = resp.json()
-                return self._parse_user_infos(json_result)
-            else:
-                return None
-        except Exception as e:
-            _LOGGER.debug(f'[find_by_id] {e}')
-            return None
 
     def find(self, options, secret_data, schema, user_id, keyword):
         # UserInfo
