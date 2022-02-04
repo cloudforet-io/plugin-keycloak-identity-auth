@@ -24,6 +24,7 @@ from spaceone.identity.manager.auth_manager import AuthManager
 
 _LOGGER = logging.getLogger(__name__)
 
+
 @authentication_handler
 class AuthService(BaseService):
     def __init__(self, metadata):
@@ -44,14 +45,14 @@ class AuthService(BaseService):
         """
         manager = self.locator.get_manager('AuthManager')
         options = params['options']
-        active = manager.verify(options)
+        manager.verify(options)
         options['auth_type'] = 'keycloak'
         endpoints = manager.get_endpoint(options)
-        capability= endpoints
+        capability = endpoints
         return {'metadata': capability}
 
     @transaction
-    @check_required(['options','secret_data'])
+    @check_required(['options', 'secret_data'])
     def verify(self, params):
         """ verify options
         Args:
@@ -73,7 +74,7 @@ class AuthService(BaseService):
         return {}
 
     @transaction
-    @check_required(['options','secret_data'])
+    @check_required(['options', 'secret_data'])
     def find(self, params):
         """ verify options
         Args:
@@ -97,7 +98,7 @@ class AuthService(BaseService):
         # collect plugins_info
         user_id = params.get('user_id', None)
         keyword = params.get('keyword', None)
-        if user_id == None and keyword == None:
+        if user_id is None and keyword is None:
             raise ERROR_INVALID_FIND_REQUEST()
 
         user_infos = manager.find(options, secret_data, schema, user_id, keyword)
@@ -111,7 +112,8 @@ class AuthService(BaseService):
     @check_required(['options', 'secret_data', 'user_credentials'])
     def login(self, params):
         """ verify options
-        options = configuration (https://<domain>/auth/realms/<Realm>/.well-known/openid-configuration)
+        options = configuration
+            (https://<domain>/auth/realms/<Realm>/.well-known/openid-configuration)
         Args:
             params
               - options

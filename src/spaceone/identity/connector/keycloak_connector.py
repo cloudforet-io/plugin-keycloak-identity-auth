@@ -16,7 +16,6 @@
 
 __all__ = ["KeycloakConnector"]
 
-import json
 import requests
 import logging
 from urllib.parse import urlparse
@@ -109,7 +108,7 @@ class KeycloakConnector(BaseConnector):
         result = {}
         if 'sub' in r2:
             if 'email' in r2:
-                 result['email'] = r2['email']
+                result['email'] = r2['email']
             else:
                 result['email'] = 'UPDATE@EMAIL'
 
@@ -178,6 +177,7 @@ class KeycloakConnector(BaseConnector):
             self.user_find_url = options['metadata']['user_find_url']
 
         except Exception as e:
+            print(e)
             if 'openid-configuration' in options:
                 config_url = options['openid-configuration']
                 result = self._parse_configuration(config_url)
@@ -198,7 +198,7 @@ class KeycloakConnector(BaseConnector):
             r = requests.get(config_url)
             if r.status_code == 200:
                 json_result = r.json()
-                #_LOGGER.debug(f'[_parse_configuration] {json_result}')
+                # _LOGGER.debug(f'[_parse_configuration] {json_result}')
                 keys = ['authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer',
                         'end_session_endpoint']
                 for key in keys:
@@ -214,6 +214,7 @@ class KeycloakConnector(BaseConnector):
                 raise ERROR_AUTHORIZATION_SERVER(error_code=r.status_code)
 
         except Exception as e:
+            print(e)
             raise ERROR_INVALID_PLUGIN_OPTIONS(options=config_url)
 
     def _get_token_from_credentials(self, credentials, schema):
@@ -244,12 +245,17 @@ class KeycloakConnector(BaseConnector):
 
     def _parse_user_infos(self, users, exact_match=None):
         """
-        [{'id': 'ec504ef1-87b9-412f-85d6-e1a20b397798', 'createdTimestamp': 1589458754161, 'username': 'choonhoson@mz.co.kr', 'enabled': True, 'totp': False, 'emailVerified': False, 'firstName': 'Choonho', 'lastName': 'Son', 'email': 'choonhoson@mz.co.kr', 'disableableCredentialTypes': [], 'requiredActions': [], 'notBefore': 0, 'access': {'manageGroupMembership': False, 'view': True, 'mapRoles': False, 'impersonate': False, 'manage': False}}]
+        [{'id': 'ec504ef1-87b9-412f-85d6-e1a20b397798', 'createdTimestamp': 1589458754161,
+        'username': 'choonhoson@mz.co.kr', 'enabled': True, 'totp': False, 'emailVerified': False,
+        'firstName': 'Choonho', 'lastName': 'Son', 'email': 'choonhoson@mz.co.kr',
+        'disableableCredentialTypes': [], 'requiredActions': [], 'notBefore': 0,
+        'access': {'manageGroupMembership': False, 'view': True, 'mapRoles': False,
+                'impersonate': False, 'manage': False}}]
         """
         result = []
         for user in users:
             if 'enabled' in user:
-                if user['enabled'] == False:
+                if user['enabled'] is False:
                     continue
             else:
                 continue

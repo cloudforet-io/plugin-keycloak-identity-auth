@@ -20,16 +20,20 @@ import functools
 from spaceone.api.identity.plugin import auth_pb2
 from spaceone.core.pygrpc.message_type import *
 
+
 def UserInfo(user_dict):
     return auth_pb2.UserInfo(**user_dict)
+
 
 def UsersInfo(users_list, total_count):
     users = list(map(functools.partial(UserInfo), users_list))
     return auth_pb2.UsersInfo(results=users, total_count=total_count)
 
+
 def PluginInfo(result):
     result['metadata'] = change_struct_type(result['metadata'])
     return auth_pb2.PluginInfo(**result)
+
 
 def AuthVerifyInfo(result):
     """ result

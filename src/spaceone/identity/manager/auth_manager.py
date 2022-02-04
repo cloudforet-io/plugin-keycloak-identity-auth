@@ -26,18 +26,16 @@ from spaceone.identity.error.custom import *
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DOMAIN='gmail.com'
+DEFAULT_DOMAIN = 'gmail.com'
+
 
 class AuthManager(BaseManager):
     def __init__(self, transaction):
         super().__init__(transaction)
 
-    ###################
-    # Verify
-    ###################
     def verify(self, options, secret_data=None, schema=None):
-        """ Check Google OAuth connection
-
+        """
+        Check Google OAuth connection
         Args:
             options:
               - client_id
@@ -76,16 +74,18 @@ class AuthManager(BaseManager):
             keyword: any string for partial match
         Returns:
             users_info
+
+        Example:
+        user_info = {
+            'user_id': my_user_id,
+            'email': my_user_id,
+            'state': 'ENABLED'
+        }
         """
         connector = self.locator.get_connector('KeycloakConnector')
         user_infos = connector.find(options, secret_data, schema, user_id, keyword)
         _LOGGER.debug(f'[find] {user_infos}')
         return user_infos
-        #user_info = {
-        #    'user_id': my_user_id,
-        #    'email': my_user_id,
-        #    'state': 'ENABLED'
-        #}
 
     def get_endpoint(self, options):
         """
@@ -94,5 +94,3 @@ class AuthManager(BaseManager):
         connector = self.locator.get_connector('KeycloakConnector')
         endpoints = connector.get_endpoint(options)
         return endpoints
-
-

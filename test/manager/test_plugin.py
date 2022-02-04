@@ -1,19 +1,17 @@
-import os
 import uuid
 import unittest
 from cloudone.core.unittest.runner import RichTestRunner
 
 from cloudone.core import config
-from cloudone.core import pygrpc
-from cloudone.core import utils
-from cloudone.core.error import *
 
 from cloudone.core.transaction import Transaction
 
 from cloudone.identity.manager.auth_manager import AuthManager
 
+
 def random_string():
     return uuid.uuid4().hex
+
 
 class TestPlugin(unittest.TestCase):
     config = config.load_config('./config.yml')
@@ -60,7 +58,6 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(result['user_id'], 'choonhoson@mz.co.kr')
         self.assertEqual(result['state'], 'ENABLED')
 
-
     def test_find(self):
         """ Test Find user
         """
@@ -75,6 +72,6 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(result['user_id'], 'my.name@gmail.com')
         self.assertEqual(result['state'], 'UNIDENTIFIED')
 
+
 if __name__ == "__main__":
     unittest.main(testRunner=RichTestRunner)
-

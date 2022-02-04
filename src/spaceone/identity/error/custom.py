@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from spaceone.core.error import *
+from spaceone.core.error import ERROR_BASE
 
 
 class ERROR_NOT_SUPPORT_KEYWORD_SEARCH(ERROR_BASE):
@@ -51,4 +51,3 @@ class ERROR_INVALID_CLIENT_CREDENTIALS_OF_FIND(ERROR_BASE):
 
 class ERROR_KEYCLOAK_CONFIGURATION(ERROR_BASE):
     _message = 'Contact keycloak administrator, field={field}'
-
