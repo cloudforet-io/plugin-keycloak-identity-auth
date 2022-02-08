@@ -30,7 +30,7 @@ MAX_FIND = 25
 
 DEFAULT_FIELD_MAPPER = {
     'user_id': 'username',
-    'name': '',
+    'name': 'name',
     'email': 'email'
 }
 
