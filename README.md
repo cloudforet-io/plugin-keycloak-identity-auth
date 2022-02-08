@@ -6,11 +6,12 @@ Plugin for Keycloak OpenID Connector
 # Configuration
 
 ~~~python
-options(dict) = {
-	'openid-configuration': 'https://<SSO domain>/auth/realms/<Your Realm>/.well-known/openid-configuration',
-	'auth_type': 'keycloak_oidc',
-	'client_id': 'CLIENT ID for login'
-	}
+options = {
+    'openid-configuration': 'https://<SSO domain>/auth/realms/<Your Realm>/.well-known/openid-configuration',
+    'auth_type': 'keycloak_oidc',
+    'client_id': 'CLIENT ID for login',
+    'field_mapper': {...}
+}
 
 secret_data = {
 	'client_id': 'CLIENT ID for find users',
@@ -18,6 +19,24 @@ secret_data = {
 }
 ~~~
 
+## Field Mapper
+`field_mapper` setting allows you to change user field information.
+  
+### Default Settings
+~~~python
+{
+    'field_mapper (optional)': {
+        'user_id': 'username',
+        'name': '',
+        'email': 'email'
+    }
+}
+~~~
+### Available Keycloak Fields
+  * username
+  * email
+  * firstName
+  * lastName
 
 ## Example
 
@@ -51,19 +70,23 @@ plugin_info:
 If you init plugin, the response looks like
 
 ~~~
-{'metadata': {
+{
+    'metadata': {
 		'authorization_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/auth',
-              	'end_session_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/logout',
-                'issuer': 'https://sso.example.com/auth/realms/MY_DOMAIN',
-                'token_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/token',
-                'userinfo_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/userinfo',
-		'realm': 'MY_DOMAIN',
-		'user_find_url': 'https://sso.example.com/auth/admin/realms/MY_DOMAIN/user'
-              }
-	 }
+        'end_session_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/logout',
+        'issuer': 'https://sso.example.com/auth/realms/MY_DOMAIN',
+        'token_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/token',
+        'userinfo_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/userinfo',
+        'realm': 'MY_DOMAIN',
+        'user_find_url': 'https://sso.example.com/auth/admin/realms/MY_DOMAIN/user'
+    }
+}
 ~~~
 
 # Release Note
+
+## Version 1.3
+- Add 'field_mapper' option to change fields for authenticated users.
 
 ## Version 1.0
 

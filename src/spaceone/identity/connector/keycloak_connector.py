@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 #   Copyright 2020 The SpaceONE Authors.
 #
@@ -28,6 +27,12 @@ _LOGGER = logging.getLogger(__name__)
 
 # Number of Maximum find user result
 MAX_FIND = 25
+
+DEFAULT_FIELD_MAPPER = {
+    'user_id': 'username',
+    'name': '',
+    'email': 'email'
+}
 
 
 def _parse_realm(issuer):
@@ -79,6 +84,12 @@ class KeycloakConnector(BaseConnector):
         credentials:
           - access_token
         """
+
+        field_mapper = options.get('field_mapper', DEFAULT_FIELD_MAPPER)
+        user_id_field = self._convert_oidc_field(field_mapper['user_id'])
+        name_field = self._convert_oidc_field(field_mapper.get('name'))
+        email_field = self._convert_oidc_field(field_mapper.get('email'))
+
         self.get_endpoint(options)
         # Authorization Grant
         access_token = user_credentials.get('access_token', '')
@@ -92,6 +103,7 @@ class KeycloakConnector(BaseConnector):
             _LOGGER.debug("KeycloakConnector return code:%s" % r.status_code)
             _LOGGER.debug("KeycloakConnector return code:%s" % r.json())
             raise ERROR_NOT_FOUND(key='userinfo', value=headers)
+
         # status_code == 200
         r2 = r.json()
         _LOGGER.debug(f'response: {r2}')
@@ -105,30 +117,33 @@ class KeycloakConnector(BaseConnector):
         'family_name': 'Son',
         'email': 'choonho@example.com'}
         """
-        result = {}
-        if 'sub' in r2:
-            if 'email' in r2:
-                result['email'] = r2['email']
-            else:
-                result['email'] = 'UPDATE@EMAIL'
 
-            if 'preferred_username' in r2:
-                result['user_id'] = r2['preferred_username']
-            else:
-                # where is username
-                _LOGGER.error(f'no preferred_username: {r2}')
-                raise ERROR_KEYCLOAK_CONFIGURATION(field='preferred_username')
+        if 'sub' not in r2:
+            raise ERROR_NOT_FOUND(key='user', value='<from access_token>')
 
-            if 'name' in r2:
-                result['name'] = r2['name']
-            else:
-                result['name'] = 'UPDATE NAME'
+        result = {
+            'state': 'ENABLED'
+        }
 
-            result['state'] = 'ENABLED'
-            return result
-        raise ERROR_NOT_FOUND(key='user', value='<from access_token>')
+        if user_id_field in r2:
+            result['user_id'] = r2[user_id_field]
+        else:
+            # where is username
+            _LOGGER.error(f'no user_id field: {r2}')
+            raise ERROR_KEYCLOAK_CONFIGURATION(field=r2[user_id_field])
+
+        if name_field and name_field in r2:
+            result['name'] = r2[name_field]
+
+        if email_field and email_field in r2:
+            result['email'] = r2[email_field]
+
+        return result
 
     def find(self, options, secret_data, schema, user_id, keyword):
+        field_mapper = options.get('field_mapper', DEFAULT_FIELD_MAPPER)
+        user_id_field = field_mapper['user_id']
+
         # UserInfo
         if secret_data == {}:
             # not support find
@@ -144,19 +159,21 @@ class KeycloakConnector(BaseConnector):
 
             req_user_find_url = f'{self.user_find_url}?'
             if user_id:
-                req_user_find_url = f'{req_user_find_url}username={user_id}&'
+                req_user_find_url = f'{req_user_find_url}{user_id_field}={user_id}&'
             elif keyword:
                 req_user_find_url = f'{req_user_find_url}search={keyword}&'
             req_user_find_url = f'{req_user_find_url}max={MAX_FIND}&'
 
             _LOGGER.debug(f'[find] {req_user_find_url}')
+
             resp = requests.get(req_user_find_url, headers=headers)
             if resp.status_code == 200:
                 json_result = resp.json()
                 if user_id:
                     # Exact match
-                    return self._parse_user_infos(json_result, user_id)
-                return self._parse_user_infos(json_result)
+                    return self._parse_user_infos(json_result, field_mapper, user_id)
+
+                return self._parse_user_infos(json_result, field_mapper)
             else:
                 raise ERROR_NOT_FOUND(key='find', value=req_user_find_url)
         except Exception as e:
@@ -243,7 +260,7 @@ class KeycloakConnector(BaseConnector):
         _LOGGER.error(f'[_get_token_from_credentials] {r.status_code}')
         raise ERROR_AUTHORIZATION_SERVER(error_code=r.status_code)
 
-    def _parse_user_infos(self, users, exact_match=None):
+    def _parse_user_infos(self, users, field_mapper, exact_match=None):
         """
         [{'id': 'ec504ef1-87b9-412f-85d6-e1a20b397798', 'createdTimestamp': 1589458754161,
         'username': 'choonhoson@mz.co.kr', 'enabled': True, 'totp': False, 'emailVerified': False,
@@ -252,26 +269,33 @@ class KeycloakConnector(BaseConnector):
         'access': {'manageGroupMembership': False, 'view': True, 'mapRoles': False,
                 'impersonate': False, 'manage': False}}]
         """
+        user_id_field = field_mapper['user_id']
+        name_field = field_mapper.get('name')
+        email_field = field_mapper.get('email')
+
         result = []
         for user in users:
-            if 'enabled' in user:
-                if user['enabled'] is False:
-                    continue
-            else:
+            if user.get('enabled', False) is False:
                 continue
 
             if exact_match:
-                if exact_match != user['username']:
+                if exact_match != user[user_id_field]:
                     # This is partial match
                     continue
 
             user_info = {
-                'user_id': user['username'],
+                'user_id': user[user_id_field],
                 'state': 'ENABLED'
             }
-            if 'email' in user:
-                user_info.update({'email': user['email']})
+
+            if name_field and name_field in user:
+                user_info['name'] = user[name_field]
+
+            if email_field and email_field in user:
+                user_info['email'] = user[email_field]
+
             result.append(user_info)
+
         return result
 
     def _unidentified_user(self, user_id, keyword):
@@ -285,3 +309,14 @@ class KeycloakConnector(BaseConnector):
         else:
             raise ERROR_NOT_SUPPORT_KEYWORD_SEARCH()
         return result
+
+    @staticmethod
+    def _convert_oidc_field(field):
+        if field == 'username':
+            return 'preferred_username'
+        elif field == 'firstName':
+            return 'given_name'
+        elif field == 'lastName':
+            return 'family_name'
+        else:
+            return field

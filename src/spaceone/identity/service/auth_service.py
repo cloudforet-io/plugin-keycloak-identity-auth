@@ -24,6 +24,8 @@ from spaceone.identity.manager.auth_manager import AuthManager
 
 _LOGGER = logging.getLogger(__name__)
 
+_AVAILABLE_KEYCLOAK_FIELDS = ['username', 'email', 'firstName', 'lastName']
+
 
 @authentication_handler
 class AuthService(BaseService):
@@ -49,6 +51,10 @@ class AuthService(BaseService):
         options['auth_type'] = 'keycloak'
         endpoints = manager.get_endpoint(options)
         capability = endpoints
+
+        if 'field_mapper' in options:
+            self._check_field_mapper(options['field_mapper'])
+
         return {'metadata': capability}
 
     @transaction
@@ -132,3 +138,23 @@ class AuthService(BaseService):
         schema = params.get('schema', '')
         user_credentials = params['user_credentials']
         return manager.login(options, secret_data, schema, user_credentials)
+
+    @staticmethod
+    def _check_field_mapper(field_mapper):
+        user_id_field = field_mapper.get('user_id')
+        name_field = field_mapper.get('name')
+        email_field = field_mapper.get('email')
+
+        if user_id_field is None:
+            raise ERROR_REQUIRED_PARAMETER(key='options.field_mapper.user_id')
+
+        if user_id_field not in _AVAILABLE_KEYCLOAK_FIELDS:
+            raise ERROR_INVALID_PARAMETER(key='options.field_mapper.user_id', reason=f'Choose one of the following: '
+                                                                                     f'{_AVAILABLE_KEYCLOAK_FIELDS}')
+
+        if name_field and name_field not in _AVAILABLE_KEYCLOAK_FIELDS:
+            raise ERROR_INVALID_PARAMETER(key='options.field_mapper.name', reason=f'Choose one of the following: '
+                                                                                  f'{_AVAILABLE_KEYCLOAK_FIELDS}')
+        if email_field not in _AVAILABLE_KEYCLOAK_FIELDS:
+            raise ERROR_INVALID_PARAMETER(key='options.field_mapper.email', reason=f'Choose one of the following: '
+                                                                                   f'{_AVAILABLE_KEYCLOAK_FIELDS}')
