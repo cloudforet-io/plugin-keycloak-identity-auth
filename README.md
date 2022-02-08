@@ -14,8 +14,8 @@ options = {
 }
 
 secret_data = {
-	'client_id': 'CLIENT ID for find users',
-	'client_secret': 'client secret text'
+    'client_id': 'CLIENT ID for find users',
+    'client_secret': 'client secret text'
 }
 ~~~
 
@@ -72,7 +72,7 @@ If you init plugin, the response looks like
 ~~~
 {
     'metadata': {
-		'authorization_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/auth',
+        'authorization_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/auth',
         'end_session_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/logout',
         'issuer': 'https://sso.example.com/auth/realms/MY_DOMAIN',
         'token_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/token',
