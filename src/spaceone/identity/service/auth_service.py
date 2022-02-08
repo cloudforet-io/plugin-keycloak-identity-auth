@@ -24,7 +24,7 @@ from spaceone.identity.manager.auth_manager import AuthManager
 
 _LOGGER = logging.getLogger(__name__)
 
-_AVAILABLE_KEYCLOAK_FIELDS = ['username', 'email', 'firstName', 'lastName']
+_AVAILABLE_KEYCLOAK_FIELDS = ['username', 'email', 'firstName', 'lastName', 'name']
 
 
 @authentication_handler
@@ -151,6 +151,8 @@ class AuthService(BaseService):
         if user_id_field not in _AVAILABLE_KEYCLOAK_FIELDS:
             raise ERROR_INVALID_PARAMETER(key='options.field_mapper.user_id', reason=f'Choose one of the following: '
                                                                                      f'{_AVAILABLE_KEYCLOAK_FIELDS}')
+        if user_id_field == 'name':
+            raise ERROR_INVALID_PARAMETER(key='options.field_mapper.user_id', reason='user_id field does not allow name.')
 
         if name_field and name_field not in _AVAILABLE_KEYCLOAK_FIELDS:
             raise ERROR_INVALID_PARAMETER(key='options.field_mapper.name', reason=f'Choose one of the following: '

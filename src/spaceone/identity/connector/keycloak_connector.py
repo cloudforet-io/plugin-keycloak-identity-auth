@@ -284,15 +284,25 @@ class KeycloakConnector(BaseConnector):
                     continue
 
             user_info = {
-                'user_id': user[user_id_field],
                 'state': 'ENABLED'
             }
 
-            if name_field and name_field in user:
-                user_info['name'] = user[name_field]
+            if user_id_field == 'name':
+                user_info['user_id'] = f'{user.get("firstName")} {user.get("lastName")}'
+            else:
+                user_info['user_id'] = user[user_id_field]
 
-            if email_field and email_field in user:
-                user_info['email'] = user[email_field]
+            if name_field:
+                if name_field == 'name':
+                    user_info['name'] = f'{user.get("firstName")} {user.get("lastName")}'
+                elif name_field in user:
+                    user_info['name'] = user[name_field]
+
+            if email_field:
+                if email_field == 'name':
+                    user_info['email'] = f'{user.get("firstName")} {user.get("lastName")}'
+                elif email_field in user:
+                    user_info['email'] = user[email_field]
 
             result.append(user_info)
 

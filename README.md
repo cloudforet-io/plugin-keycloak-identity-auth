@@ -27,7 +27,7 @@ secret_data = {
 {
     'field_mapper (optional)': {
         'user_id': 'username',
-        'name': '',
+        'name': 'name',
         'email': 'email'
     }
 }
@@ -37,6 +37,7 @@ secret_data = {
   * email
   * firstName
   * lastName
+  * name: `{firstName} {lastName}`
 
 ## Example
 
