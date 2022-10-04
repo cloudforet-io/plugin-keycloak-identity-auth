@@ -254,6 +254,8 @@ class KeycloakConnector(BaseConnector):
         if r.status_code == 200:
             json_result = r.json()
             return json_result['access_token']
+        elif r.status_code == 400:
+            raise ERROR_BAD_REQUESTS(requests=self.token_endpoint, data=data)
         elif r.status_code == 401:
             raise ERROR_INVALID_CLIENT_CREDENTIALS_OF_FIND(message=r.status_code)
 

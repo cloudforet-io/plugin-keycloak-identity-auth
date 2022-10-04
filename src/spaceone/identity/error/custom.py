@@ -51,3 +51,6 @@ class ERROR_INVALID_CLIENT_CREDENTIALS_OF_FIND(ERROR_BASE):
 
 class ERROR_KEYCLOAK_CONFIGURATION(ERROR_BASE):
     _message = 'Contact keycloak administrator, field={field}'
+
+class ERROR_BAD_REQUESTS(ERROR_BASE):
+    _message = 'Invalid Requests {requests}, {data}'
