@@ -70,8 +70,9 @@ class KeycloakConnector(BaseConnector):
         # After connection without param.
         # It should return 404
         self.get_endpoint(options)
+        _verify = options.get('verify', True)
 
-        r = requests.get(self.authorization_endpoint)
+        r = requests.get(self.authorization_endpoint, verify=_verify)
         if r.status_code == 400:
             return "ACTIVE"
         else:
@@ -91,6 +92,8 @@ class KeycloakConnector(BaseConnector):
         email_field = self._convert_oidc_field(field_mapper.get('email'))
 
         self.get_endpoint(options)
+        _verify = options.get('verify', True)
+
         # Authorization Grant
         access_token = user_credentials.get('access_token', '')
         headers = {
@@ -98,7 +101,7 @@ class KeycloakConnector(BaseConnector):
             'Authorization': 'Bearer {}'.format(access_token)
         }
         # Check token info
-        r = requests.get(self.userinfo_endpoint, headers=headers)
+        r = requests.get(self.userinfo_endpoint, headers=headers, verify=_verify)
         if r.status_code != 200:
             _LOGGER.debug("KeycloakConnector return code:%s" % r.status_code)
             _LOGGER.debug("KeycloakConnector return code:%s" % r.json())
@@ -151,6 +154,7 @@ class KeycloakConnector(BaseConnector):
 
         try:
             self.get_endpoint(options)
+            _verify = options.get('verify', True)
             access_token = self._get_token_from_credentials(secret_data, schema)
             headers = {
                 'Content-Type': 'application/json',
@@ -166,7 +170,7 @@ class KeycloakConnector(BaseConnector):
 
             _LOGGER.debug(f'[find] {req_user_find_url}')
 
-            resp = requests.get(req_user_find_url, headers=headers)
+            resp = requests.get(req_user_find_url, headers=headers, verify=_verify)
             if resp.status_code == 200:
                 json_result = resp.json()
                 if user_id:
@@ -197,7 +201,8 @@ class KeycloakConnector(BaseConnector):
             print(e)
             if 'openid-configuration' in options:
                 config_url = options['openid-configuration']
-                result = self._parse_configuration(config_url)
+                _verify = options.get('verify', True)
+                result = self._parse_configuration(config_url, _verify)
             else:
                 raise ERROR_INVALID_PLUGIN_OPTIONS(options=options)
             self.authorization_endpoint = result['authorization_endpoint']
@@ -207,12 +212,12 @@ class KeycloakConnector(BaseConnector):
 
         return result
 
-    def _parse_configuration(self, config_url):
+    def _parse_configuration(self, config_url, _verify):
         """ discover endpoints
         """
         result = {}
         try:
-            r = requests.get(config_url)
+            r = requests.get(config_url, verify=_verify)
             if r.status_code == 200:
                 json_result = r.json()
                 # _LOGGER.debug(f'[_parse_configuration] {json_result}')

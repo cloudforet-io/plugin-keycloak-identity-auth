@@ -10,7 +10,8 @@ options = {
     'openid-configuration': 'https://<SSO domain>/auth/realms/<Your Realm>/.well-known/openid-configuration',
     'auth_type': 'keycloak_oidc',
     'client_id': 'CLIENT ID for login',
-    'field_mapper': {...}
+    'field_mapper': {...},
+    'verify': True
 }
 
 secret_data = {
@@ -21,6 +22,9 @@ secret_data = {
 
 ## Field Mapper
 `field_mapper` setting allows you to change user field information.
+
+## Verify
+If you set `verify` to `False`, the keycloak server's certificate will not be verified. 
   
 ### Default Settings
 ~~~python
