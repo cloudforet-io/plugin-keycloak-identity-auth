@@ -2,12 +2,25 @@
 
 Plugin for Keycloak OpenID Connector
 
+# Tested Keycloak version
+
+| Version | Status |
+| 21.1.0  | Tested |
+
 
 # Configuration
 
+> Based on Keycloak version, ***openid-configuration*** url is differrent. After ver 17.0.0, ***auth*** after base url is removed.
+
+
+| Version | open-configuration URL format |
+| ---     | --- |
+| 17.0.0 ~ | https://<SSO domain>/realms/<Your Realm>/.well-known/openid-configuration |
+| ~ 16.1.0 | https://<SSO domain>/auth/realms/<Your Realm>/.well-known/openid-configuration |
+
 ~~~python
 options = {
-    'openid-configuration': 'https://<SSO domain>/auth/realms/<Your Realm>/.well-known/openid-configuration',
+    'openid-configuration': 'https://<SSO domain>/realms/<Your Realm>/.well-known/openid-configuration',
     'auth_type': 'keycloak_oidc',
     'client_id': 'CLIENT ID for login',
     'field_mapper': {...},
@@ -61,7 +74,7 @@ See https://github.com/spaceone-dev/plugin-keycloak-oidc/wiki/Keycloak-configura
 plugin_info:
   options:
     auth_type: keycloak_oidc
-    openid-configuration: https://sso.example.com/auth/realms/test-domain/.well-known/openid-configuration
+    openid-configuration: https://sso.example.com/realms/test-domain/.well-known/openid-configuration
     client_id: test_client_id
   plugin_id: plugin-keycloak-identity-auth
   secret_data:
@@ -77,18 +90,21 @@ If you init plugin, the response looks like
 ~~~
 {
     'metadata': {
-        'authorization_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/auth',
-        'end_session_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/logout',
-        'issuer': 'https://sso.example.com/auth/realms/MY_DOMAIN',
-        'token_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/token',
-        'userinfo_endpoint': 'https://sso.example.com/auth/realms/MY_DOMAIN/protocol/openid-connect/userinfo',
+        'authorization_endpoint': 'https://sso.example.com/realms/MY_DOMAIN/protocol/openid-connect/auth',
+        'end_session_endpoint': 'https://sso.example.com/realms/MY_DOMAIN/protocol/openid-connect/logout',
+        'issuer': 'https://sso.example.com/realms/MY_DOMAIN',
+        'token_endpoint': 'https://sso.example.com/realms/MY_DOMAIN/protocol/openid-connect/token',
+        'userinfo_endpoint': 'https://sso.example.com/realms/MY_DOMAIN/protocol/openid-connect/userinfo',
         'realm': 'MY_DOMAIN',
-        'user_find_url': 'https://sso.example.com/auth/admin/realms/MY_DOMAIN/user'
+        'user_find_url': 'https://sso.example.com/admin/realms/MY_DOMAIN/user'
     }
 }
 ~~~
 
 # Release Note
+
+## Version 1.4
+- Support new openid-configuration endpoint (keycloak: 17.0.0 ~)
 
 ## Version 1.3
 - Add 'field_mapper' option to change fields for authenticated users.
