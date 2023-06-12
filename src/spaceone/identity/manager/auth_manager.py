@@ -30,8 +30,8 @@ DEFAULT_DOMAIN = 'gmail.com'
 
 
 class AuthManager(BaseManager):
-    def __init__(self, transaction):
-        super().__init__(transaction)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def verify(self, options, secret_data=None, schema=None):
         """

@@ -57,8 +57,8 @@ def _parse_user_find_url(issuer):
 
 
 class KeycloakConnector(BaseConnector):
-    def __init__(self, transaction, config):
-        super().__init__(transaction, config)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.authorization_endpoint = None
         self.token_endpoint = None
         self.userinfo_endpoint = None
