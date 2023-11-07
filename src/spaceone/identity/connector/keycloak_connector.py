@@ -159,7 +159,7 @@ class KeycloakConnector(BaseConnector):
         try:
             self.get_endpoint(options)
             _verify = options.get('verify', True)
-            access_token = self._get_token_from_credentials(secret_data, schema)
+            access_token = self._get_token_from_credentials(secret_data, schema, _verify)
             headers = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer {}'.format(access_token)
@@ -243,7 +243,7 @@ class KeycloakConnector(BaseConnector):
             print(e)
             raise ERROR_INVALID_PLUGIN_OPTIONS(options=config_url)
 
-    def _get_token_from_credentials(self, credentials, schema):
+    def _get_token_from_credentials(self, credentials, schema, verify):
         """ get access_token from keycloak
         """
         if schema == '' or schema == 'oauth2_client_credentials':
@@ -259,7 +259,7 @@ class KeycloakConnector(BaseConnector):
         else:
             raise ERROR_INVALID_PLUGIN_OPTIONS(options='secret_data')
 
-        r = requests.post(self.token_endpoint, data=data, verify=False)
+        r = requests.post(self.token_endpoint, data=data, verify=verify)
         if r.status_code == 200:
             json_result = r.json()
             return json_result['access_token']
