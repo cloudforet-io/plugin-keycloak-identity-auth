@@ -17,6 +17,8 @@ __all__ = ["KeycloakConnector"]
 
 import requests
 import logging
+import os
+
 from urllib.parse import urlparse
 
 from spaceone.core.error import *
@@ -52,8 +54,10 @@ def _parse_user_find_url(issuer):
     realm = temp[-1]
 
     items = urlparse(issuer)
-    url = f'{items.scheme}://{items.netloc}/auth/admin/realms/{realm}/users'
-    return url
+
+    # fix : To support keycloak API version v18++, KEYCLOAK_API_BASE_PATH need to set '/admin/realms/'
+    base_path = os.environ.get("KEYCLOAK_API_BASE_PATH", "/auth/admin/realms/")
+    return f'{items.scheme}://{items.netloc}{base_path}{realm}/users'
 
 
 class KeycloakConnector(BaseConnector):
