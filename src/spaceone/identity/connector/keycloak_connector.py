@@ -17,7 +17,7 @@ __all__ = ["KeycloakConnector"]
 
 import requests
 import logging
-from urllib.parse import urlparse
+from urllib.parse import urljoin
 
 from spaceone.core.error import *
 from spaceone.identity.error import *
@@ -34,6 +34,8 @@ DEFAULT_FIELD_MAPPER = {
     'email': 'email'
 }
 
+DEFAULT_KEYCLOAK_ADMIN_BASE_URL = "/auth/admin/realms/"
+
 
 def _parse_realm(issuer):
     """
@@ -44,16 +46,16 @@ def _parse_realm(issuer):
     return realm
 
 
-def _parse_user_find_url(issuer):
+def _parse_user_find_url(issuer, _admin_url_base_path):
     """
     issuer: https://sso.stargate.spaceone.dev/auth/realms/SpaceOne
     """
     temp = issuer.split('/')
     realm = temp[-1]
 
-    items = urlparse(issuer)
-    url = f'{items.scheme}://{items.netloc}/auth/admin/realms/{realm}/users'
-    return url
+    base_path = f'{_admin_url_base_path}{realm}/users'
+
+    return urljoin(base=issuer, url=base_path)
 
 
 class KeycloakConnector(BaseConnector):
@@ -155,7 +157,7 @@ class KeycloakConnector(BaseConnector):
         try:
             self.get_endpoint(options)
             _verify = options.get('verify', True)
-            access_token = self._get_token_from_credentials(secret_data, schema)
+            access_token = self._get_token_from_credentials(secret_data, schema, _verify)
             headers = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer {}'.format(access_token)
@@ -202,7 +204,9 @@ class KeycloakConnector(BaseConnector):
             if 'openid-configuration' in options:
                 config_url = options['openid-configuration']
                 _verify = options.get('verify', True)
-                result = self._parse_configuration(config_url, _verify)
+                # fix : To support keycloak API version v18++, KEYCLOAK_API_BASE_PATH need to set '/admin/realms/'
+                _admin_url_base_path = options.get('admin_url_base_path', DEFAULT_KEYCLOAK_ADMIN_BASE_URL)
+                result = self._parse_configuration(config_url, _verify, _admin_url_base_path)
             else:
                 raise ERROR_INVALID_PLUGIN_OPTIONS(options=options)
             self.authorization_endpoint = result['authorization_endpoint']
@@ -212,7 +216,7 @@ class KeycloakConnector(BaseConnector):
 
         return result
 
-    def _parse_configuration(self, config_url, _verify):
+    def _parse_configuration(self, config_url, _verify, _admin_url_base_path):
         """ discover endpoints
         """
         result = {}
@@ -229,7 +233,7 @@ class KeycloakConnector(BaseConnector):
                     result[key] = json_result[key]
                 # add realm
                 result['realm'] = _parse_realm(json_result['issuer'])
-                result['user_find_url'] = _parse_user_find_url(json_result['issuer'])
+                result['user_find_url'] = _parse_user_find_url(json_result['issuer'], _admin_url_base_path)
                 _LOGGER.debug(f'[_parse_configuration] {result}')
                 return result
             else:
@@ -239,7 +243,7 @@ class KeycloakConnector(BaseConnector):
             print(e)
             raise ERROR_INVALID_PLUGIN_OPTIONS(options=config_url)
 
-    def _get_token_from_credentials(self, credentials, schema):
+    def _get_token_from_credentials(self, credentials, schema, verify):
         """ get access_token from keycloak
         """
         if schema == '' or schema == 'oauth2_client_credentials':
@@ -255,7 +259,7 @@ class KeycloakConnector(BaseConnector):
         else:
             raise ERROR_INVALID_PLUGIN_OPTIONS(options='secret_data')
 
-        r = requests.post(self.token_endpoint, data=data, verify=False)
+        r = requests.post(self.token_endpoint, data=data, verify=verify)
         if r.status_code == 200:
             json_result = r.json()
             return json_result['access_token']
