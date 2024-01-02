@@ -1,1 +1,1 @@
-from spaceone.identity.manager.auth_manager import AuthManager
+from spaceone.identity.manager.external_auth_manager import ExternalAuthManager

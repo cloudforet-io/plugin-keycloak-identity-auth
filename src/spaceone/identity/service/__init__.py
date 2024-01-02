@@ -1,1 +1,1 @@
-from spaceone.identity.service.auth_service import AuthService
+from spaceone.identity.service.external_auth_service import ExternalAuthService
