@@ -59,7 +59,13 @@ class ExternalAuthService(BaseService):
 
         metadata = {}
         metadata.update(endpoints)
-        metadata.update({"protocol": "oidc", "identity_provider": "keycloak"})
+        metadata.update(
+            {
+                "auth_type": "keycloak",
+                "protocol": "oidc",
+                "identity_provider": "keycloak",
+            }
+        )
 
         return {"metadata": metadata}
 
