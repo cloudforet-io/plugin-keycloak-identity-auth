@@ -1,21 +1,16 @@
-CONNECTORS = {
-}
-
+CONNECTORS = {}
 
 LOG = {
-    'filters': {
-        'masking': {
-            'rules': {
-                'Auth.verify': ['secret_data'],
-                'Auth.find': ['secret_data'],
-                'Auth.login': ['secret_data']
+    "filters": {
+        "masking": {
+            "rules": {
+                "ExternalAuth.init": ["secret_data"],
+                "ExternalAuth.authorize": ["secret_data"],
             }
         }
     }
 }
 
-HANDLERS = {
-}
+HANDLERS = {}
 
-ENDPOINTS = {
-}
+ENDPOINTS = {}

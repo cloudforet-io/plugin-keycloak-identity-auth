@@ -18,39 +18,42 @@ from spaceone.core.error import ERROR_BASE
 
 
 class ERROR_NOT_SUPPORT_KEYWORD_SEARCH(ERROR_BASE):
-    _message = 'Keyword search is not supported, use user_id(email)'
+    _message = "Keyword search is not supported, use user_id(email)"
 
 
 class ERROR_NOT_FOUND_USER_ID(ERROR_BASE):
-    _message = 'user_id: {user_id} does not exist.'
+    _message = "user_id: {user_id} does not exist."
 
 
 class ERROR_NOT_FOUND_USERS(ERROR_BASE):
-    _message = 'not found users.'
+    _message = "not found users."
 
 
 class ERROR_INVALID_FIND_REQUEST(ERROR_BASE):
-    _message = 'user_id or keyword is required'
+    _message = "user_id or keyword is required"
 
 
 class ERROR_INVALID_PLUGIN_OPTIONS(ERROR_BASE):
-    _message = 'Invalid options={options}'
+    _message = "Invalid options={options}"
 
 
 class ERROR_AUTHORIZATION_SERVER(ERROR_BASE):
-    _message = 'Authorization Server response code: {error_code}'
+    _message = "Authorization Server response code: {error_code}"
 
 
 class ERROR_AUTHORIZATION_SERVER_RESPONSE(ERROR_BASE):
-    _message = 'Authorization Server response {keys} not in {response}'
+    _message = "Authorization Server response {keys} not in {response}"
 
 
 class ERROR_INVALID_CLIENT_CREDENTIALS_OF_FIND(ERROR_BASE):
-    _message = '{response} Invalid Client Credentials for find request, check permission'
+    _message = (
+        "{response} Invalid Client Credentials for find request, check permission"
+    )
 
 
 class ERROR_KEYCLOAK_CONFIGURATION(ERROR_BASE):
-    _message = 'Contact keycloak administrator, field={field}'
+    _message = "Contact keycloak administrator, field={field}"
+
 
 class ERROR_BAD_REQUESTS(ERROR_BASE):
-    _message = 'Invalid Requests {requests}, {data}'
+    _message = "Invalid Requests {requests}, {data}"

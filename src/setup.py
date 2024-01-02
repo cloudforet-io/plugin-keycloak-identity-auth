@@ -16,23 +16,20 @@
 
 from setuptools import setup, find_packages
 
-with open('VERSION', 'r') as f:
+with open("VERSION", "r") as f:
     VERSION = f.read().strip()
     f.close()
 
 setup(
-    name='plugin-keycloak-oidc',
+    name="plugin-keycloak-oidc",
     version=VERSION,
-    description='Keycloak OpenID Connector Plugin',
-    long_description='SpaceONE Identity Auth with Keycloak',
-    url='https://www.spaceone.dev/',
-    author='MEGAZONE SpaceONE Team',
-    author_email='admin@spaceone.dev',
-    license='Apache License 2.0',
+    description="Keycloak OpenID Connector Plugin",
+    long_description="SpaceONE Identity Auth with Keycloak",
+    url="https://www.spaceone.dev/",
+    author="MEGAZONE SpaceONE Team",
+    author_email="admin@spaceone.dev",
+    license="Apache License 2.0",
     packages=find_packages(),
-    install_requires=[
-        'spaceone-core',
-        'spaceone-api'
-    ],
+    install_requires=["spaceone-core", "spaceone-api"],
     zip_safe=False,
 )
