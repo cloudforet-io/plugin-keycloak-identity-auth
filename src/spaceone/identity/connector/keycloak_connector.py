@@ -20,6 +20,7 @@ import logging
 
 from spaceone.core.error import *
 from spaceone.core.connector import BaseConnector
+from urllib.parse import urlparse
 
 from spaceone.identity.error import *
 
@@ -49,6 +50,7 @@ class KeycloakConnector(BaseConnector):
         self.userinfo_endpoint = None
         self.end_session_endpoint = None
         self.user_find_url = None
+        self.client_id = None
         self.issuer = None
         self.realm = None
 
@@ -138,6 +140,8 @@ class KeycloakConnector(BaseConnector):
         userinfo_endpoint
         """
         try:
+            if client_id := options.get("client_id"):
+                self.client_id = client_id
             if metadata := options.get("metadata"):
                 self.authorization_endpoint = metadata["authorization_endpoint"]
                 self.token_endpoint = metadata["token_endpoint"]
@@ -207,8 +211,9 @@ class KeycloakConnector(BaseConnector):
         """
         issuer: https://sso.stargate.spaceone.dev/auth/realms/SpaceOne
         """
-        items = issuer.split("/")[:-1]
-        realm = items[-1]
+        parsed_url = urlparse(issuer)
+        realm = parsed_url.path.split("/")[-1]
+
         return realm
 
     @staticmethod

@@ -66,32 +66,6 @@ class ExternalAuthManager(BaseManager):
         )
         return user_info
 
-    # def find(self, options, secret_data, schema, user_id=None, keyword=None):
-    #     """Find User information
-    #
-    #     GoogleOauth cannot find keyword search,
-    #     Please send user_id only.
-    #
-    #     Args:
-    #         options(dict):
-    #           - domain: domain name of company
-    #         user_id: user_id for exact matching (ex. example@gmail.com)
-    #         keyword: any string for partial match
-    #     Returns:
-    #         users_info
-    #
-    #     Example:
-    #     user_info = {
-    #         'user_id': my_user_id,
-    #         'email': my_user_id,
-    #         'state': 'ENABLED'
-    #     }
-    #     """
-    #     connector = self.locator.get_connector("KeycloakConnector")
-    #     user_infos = connector.find(options, secret_data, schema, user_id, keyword)
-    #     _LOGGER.debug(f"[find] {user_infos}")
-    #     return user_infos
-
     def get_endpoint(self, options) -> dict:
         """
         Discover endpoints
@@ -104,3 +78,11 @@ class ExternalAuthManager(BaseManager):
             "end_session_endpoint": self.keycloak_connector.end_session_endpoint,
         }
         return endpoints
+
+    def get_metadata(self) -> dict:
+        metadata = {}
+        if client_id := self.keycloak_connector.client_id:
+            metadata.update({"client_id": client_id})
+        if realm := self.keycloak_connector.realm:
+            metadata.update({"realm": realm})
+        return metadata
