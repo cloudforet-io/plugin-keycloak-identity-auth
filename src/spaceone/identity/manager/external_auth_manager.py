@@ -49,21 +49,25 @@ class ExternalAuthManager(BaseManager):
         return response
 
     def authorize(
-        self, options: dict, secret_data: dict, schema_id: str, credentials: dict
+        self,
+        options: dict,
+        secret_data: dict,
+        credentials: dict,
+        domain_id: str,
+        metadata: dict,
+        schema_id: str = None,
     ):
         """Get access_token from credentials
         Args:
-            options(dict):
-              - domain: domain name of company (ex. gmail.com)
-            user_credentials(dict)
-              - access_token: google_oauth access_token for verifying
+            'options': 'dict',
+            'secret_data': 'dict',
+            'schema_id': 'str'
+            'credentials': 'dict'
         Return:
             user_info(dict)
         """
 
-        user_info = self.keycloak_connector.authorize(
-            options, secret_data, schema_id, credentials
-        )
+        user_info = self.keycloak_connector.authorize(options, secret_data, credentials)
         return user_info
 
     def get_endpoint(self, options) -> dict:

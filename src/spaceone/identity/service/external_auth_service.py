@@ -70,17 +70,16 @@ class ExternalAuthService(BaseService):
         return {"metadata": metadata}
 
     @transaction
-    @check_required(["options", "secret_data", "credentials"])
+    @check_required(["options", "secret_data", "credentials", "domain_id"])
     def authorize(self, params):
         """verify options
-        options = configuration
-            (https://<domain>/auth/realms/<Realm>/.well-known/openid-configuration)
         Args:
             params
-              - options
-              - secret_data
-              - schema_id
-              - user_credentials
+              - 'options' : 'dict'
+              - 'secret_data': may be empty dictionary
+              - 'credentials': 'dict'                         #required
+              - 'domain_id': 'str'                            #required
+              - 'metadata': 'dict'
 
         Returns:
 
@@ -89,10 +88,11 @@ class ExternalAuthService(BaseService):
         """
         options = params["options"]
         secret_data = params["secret_data"]
-        schema_id = params.get("schema_id", "")
-        credentials = params["user_credentials"]
+        credentials = params["credentials"]
+        domain_id = params["domain_id"]
+        metadata = params.get("metadata", {})
         return self.external_auth_manager.authorize(
-            options, secret_data, schema_id, credentials
+            options, secret_data, credentials, domain_id, metadata
         )
 
     @staticmethod
