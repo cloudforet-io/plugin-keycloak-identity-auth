@@ -57,7 +57,7 @@ class ExternalAuthService(BaseService):
         if "field_mapper" in options:
             self._check_field_mapper(options["field_mapper"])
 
-        metadata = {}
+        metadata = self.external_auth_manager.get_metadata()
         metadata.update(endpoints)
         metadata.update(
             {
