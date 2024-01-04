@@ -71,7 +71,7 @@ class KeycloakConnector(BaseConnector):
                 key="authorization_endpoint", value=self.authorization_endpoint
             )
 
-    def authorize(self, options, secret_data, schema_id, credentials):
+    def authorize(self, options, secret_data, credentials):
         """
         options
         credentials:
