@@ -29,6 +29,8 @@ _AVAILABLE_KEYCLOAK_FIELDS = ["username", "email", "firstName", "lastName", "nam
 
 @authentication_handler
 class ExternalAuthService(BaseService):
+    resource = "ExternalAuth"
+
     def __init__(self, metadata):
         super().__init__(metadata)
         self.external_auth_manager: ExternalAuthManager = self.locator.get_manager(
