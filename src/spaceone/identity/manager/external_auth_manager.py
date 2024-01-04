@@ -53,10 +53,10 @@ class ExternalAuthManager(BaseManager):
     ):
         """Get access_token from credentials
         Args:
-            options(dict):
-              - domain: domain name of company (ex. gmail.com)
-            user_credentials(dict)
-              - access_token: google_oauth access_token for verifying
+            'options': 'dict',
+            'secret_data': 'dict',
+            'schema_id': 'str'
+            'credentials': 'dict'
         Return:
             user_info(dict)
         """

@@ -90,7 +90,7 @@ class ExternalAuthService(BaseService):
         options = params["options"]
         secret_data = params["secret_data"]
         schema_id = params.get("schema_id", "")
-        credentials = params["user_credentials"]
+        credentials = params["credentials"]
         return self.external_auth_manager.authorize(
             options, secret_data, schema_id, credentials
         )
